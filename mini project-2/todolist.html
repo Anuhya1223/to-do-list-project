@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Task Manager</title>
+    <style>
+        body {
+            font-family: Arial;
+            background: #f2f2f2;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .box {
+            background: white;
+            padding: 20px;
+            width: 400px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        h2 {
+            text-align: center;
+        }
+
+        input, textarea, button {
+            width: 100%;
+            padding: 8px;
+            margin-top: 8px;
+        }
+
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        .link {
+            text-align: center;
+            margin-top: 10px;
+            cursor: pointer;
+            color: blue;
+        }
+
+        .task {
+            background: #e9e9e9;
+            padding: 8px;
+            margin-top: 8px;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .completed {
+            text-decoration: line-through;
+            color: gray;
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- ADD TASK PAGE -->
+<div class="box" id="addPage">
+    <h2>Add Task</h2>
+
+    <input id="name" placeholder="Name">
+    <input id="dob" type="date">
+    <input id="taskDate" type="date">
+    <textarea id="task" placeholder="Task details"></textarea>
+
+    <button onclick="addTask()">Save Task</button>
+
+    <div class="link" onclick="showViewPage()">View My Tasks</div>
+</div>
+
+<!-- VIEW TASK PAGE -->
+<div class="box" id="viewPage" style="display:none;">
+    <h2>View Tasks</h2>
+
+    <input id="vname" placeholder="Name">
+    <input id="vdob" type="date">
+    <input id="viewDate" type="date">
+
+    <button onclick="viewTasks()">Show Tasks</button>
+
+    <div id="result"></div>
+
+    <div class="link" onclick="showAddPage()">Add New Task</div>
+</div>
+
+<script>
+    let tasks = [];
+
+    if (localStorage.getItem("tasks")) {
+        tasks = JSON.parse(localStorage.getItem("tasks"));
+    }
+
+    function addTask() {
+        let name = document.getElementById("name").value.trim().toLowerCase();
+        let dob = document.getElementById("dob").value;
+        let taskDate = document.getElementById("taskDate").value;
+        let task = document.getElementById("task").value.trim();
+
+        if (!name || !dob || !taskDate || !task) {
+            alert("Please fill all fields");
+            return;
+        }
+
+        tasks.push({
+            id: Date.now(),          // unique id
+            name: name,
+            dob: dob,
+            taskDate: taskDate,
+            task: task,
+            completed: false         // ALWAYS pending initially
+        });
+
+        localStorage.setItem("tasks", JSON.stringify(tasks));
+
+        alert("Task added");
+
+        document.getElementById("name").value = "";
+        document.getElementById("dob").value = "";
+        document.getElementById("taskDate").value = "";
+        document.getElementById("task").value = "";
+    }
+
+    function viewTasks() {
+        let name = document.getElementById("vname").value.trim().toLowerCase();
+        let dob = document.getElementById("vdob").value;
+        let viewDate = document.getElementById("viewDate").value;
+
+        let result = document.getElementById("result");
+        result.innerHTML = "";
+
+        let filtered = tasks.filter(t =>
+            t.name === name &&
+            t.dob === dob &&
+            t.taskDate === viewDate
+        );
+
+        if (filtered.length === 0) {
+            result.innerHTML = "<p>No tasks found</p>";
+            return;
+        }
+
+        filtered.forEach(t => {
+            let div = document.createElement("div");
+            div.className = "task";
+
+            let checkbox = document.createElement("input");
+            checkbox.type = "checkbox";
+            checkbox.checked = t.completed;
+
+            let span = document.createElement("span");
+            span.textContent = t.task;
+            if (t.completed) {
+                span.classList.add("completed");
+            }
+
+            checkbox.onchange = function () {
+                t.completed = checkbox.checked;
+                localStorage.setItem("tasks", JSON.stringify(tasks));
+                viewTasks(); // refresh view
+            };
+
+            div.appendChild(checkbox);
+            div.appendChild(span);
+            result.appendChild(div);
+        });
+    }
+
+    function showViewPage() {
+        document.getElementById("addPage").style.display = "none";
+        document.getElementById("viewPage").style.display = "block";
+    }
+
+    function showAddPage() {
+        document.getElementById("viewPage").style.display = "none";
+        document.getElementById("addPage").style.display = "block";
+    }
+</script>
+
+</body>
+</html>
